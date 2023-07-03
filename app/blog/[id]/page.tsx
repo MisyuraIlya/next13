@@ -1,3 +1,4 @@
+import { getAllPosts } from '@/services/getPosts';
 import { Metadata } from 'next';
 import React, {FC} from 'react';
 
@@ -18,22 +19,33 @@ type props = {
     }
 }
 
-export async function generateMetadata({params: {id}}: props): Promise<Metadata> {
-    const post = await getData(id)
-    return {
-        title: post.title
-    }
+export async function generateStaticParams() {
+    const posts: any[] = await getAllPosts()
+
+    return posts.map((post) => ({
+        slug: post.id.toString(),
+    }))
 }
 
-const page: FC<props> = async ({params: {id}}) => {
-    const post = await getData(id)
-    console.log('post',post)
-    return (
-        <div>
-            <h1>{post.title}</h1>
-            <p>{post.body}</p>
-        </div>
-    );
-};
+export async function generateMetadata({
+    params: { id },
+  }: props): Promise<Metadata> {
+    const post = await getData(id);
+  
+    return {
+      title: post.title,
+    };
+  }
+  
+  export const revalidate = 60
 
-export default page;
+  export default async function Post({ params: { id } }: props) {
+    const post = await getData(id);
+  
+    return (
+      <>
+        <h1>{post.title}</h1>
+        <p>{post.body}</p>
+      </>
+    );
+  }
